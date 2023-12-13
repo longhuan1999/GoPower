@@ -171,7 +171,7 @@ function loadSettings() {
 			// 从响应中获取字典列表数据
 			let data = response.data;
 			if (data.code == 200) {
-				if (data.data.length > 0){
+				if (data.data.length > 0) {
 					s_datas.value = data.data;
 				}
 			}
@@ -397,7 +397,7 @@ function add_setting() {
 const c_runtime = computed((shutdown_api, shutdown_api_key) => {
 
 })
-const formatter = (row, column) => {
+function formatter(row, column) {
 	let shutdown_api = row.shutdown_api + "/api/health";
 	let shutdown_api_key = row.shutdown_api_key;
 
@@ -419,7 +419,15 @@ const formatter = (row, column) => {
 		.catch(function (error) {
 			run_time.value[key] = "离线"
 		});
-	return run_time.value[key]
+	return `
+		<div>
+			<span>${run_time.value[key]}</span>
+			<template #default="scope">
+			<el-button type="primary" size="mini" @click="formatter(scope.$row, scope.$index)">更新</el-button>
+			</template>
+		</div>
+	`;
+	//return run_time.value[key]
 }
 
 onMounted(() => {
@@ -445,10 +453,27 @@ onMounted(() => {
 
 //删除数据
 function del_sdata(row, index) {
-	s_datas.value.splice(index, 1)
-	//重新保存到浏览器
-	//localStorage.setItem("s_datas", JSON.stringify(s_datas.value));
-	saveSettings()
+	$confirm('删除配置操作无法撤销, 是否继续?', '提示', {
+		confirmButtonText: '确定',
+		cancelButtonText: '取消',
+		type: 'warning',
+	})
+		.then(() => {
+			s_datas.value.splice(index, 1)
+			//重新保存到浏览器
+			//localStorage.setItem("s_datas", JSON.stringify(s_datas.value));
+			saveSettings()
+			$message({
+				type: 'success',
+				message: '删除成功!',
+			})
+		})
+		.catch(() => {
+			$message({
+				type: 'info',
+				message: '已取消删除',
+			})
+		})
 }
 //编辑数据
 function edit_sdata(index) {
